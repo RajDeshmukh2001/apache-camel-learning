@@ -1,0 +1,13 @@
+- beans:
+    - name: messageProcessor
+      type: "com.camellearning.MessageProcessor"
+
+- route:
+    id: message-process-route
+    from:
+      uri: "timer:message?repeatCount=1"
+      steps:
+        - process:
+            ref: messageProcessor
+        - log:
+            message: "Body: ${body}, Name: ${header.name}, Source: ${header.source}"
