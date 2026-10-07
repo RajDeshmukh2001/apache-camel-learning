@@ -1,0 +1,13 @@
+- beans:
+    - name: uppercaseProcessor
+      type: "com.camellearning.UppercaseProcessor"
+
+- route:
+    id: file-process-route
+    from:
+      uri: "file:input?noop=true"
+      steps:
+        - process:
+            ref: "uppercaseProcessor"
+        - to:
+            uri: "file:output"
