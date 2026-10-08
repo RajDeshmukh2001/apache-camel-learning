@@ -61,6 +61,18 @@
               - log:
                   message: "Payment is valid: ${variable.paymentAmount}"
 
+        - split:
+            simple: "${body[items]}"
+            steps:
+              - log:
+                  message: "Item: ${body}"
+
+              - filter:
+                  simple: "${body[quantity]} > 0"
+                  steps:
+                    - log:
+                        message: "Valid item: ${body[name]}, Quantity: ${body[quantity]}"
+
         - setBody:
             simple: |
               {
