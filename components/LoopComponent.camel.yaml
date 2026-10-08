@@ -1,0 +1,16 @@
+- route:
+    from:
+      uri: timer:loop?repeatCount=1
+      steps:
+        - setVariable:
+            name: index
+            constant: "0"
+        - loop:
+            expression:
+              simple: "6"
+            steps:
+              - log:
+                  message: "Current index: ${variable.index}"
+              - setVariable:
+                  name: index
+                  simple: "${sum(${variable.index}, 1)}"
