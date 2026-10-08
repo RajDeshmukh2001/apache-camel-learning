@@ -1,0 +1,11 @@
+- route:
+    from:
+      uri: timer:split?repeatCount=1
+      steps:
+        - setBody:
+            simple: "Raj,Virat,Rohit"
+        - split:
+            simple: "${body}"
+            steps:
+              - log:
+                  message: "Processing record: ${body}"
