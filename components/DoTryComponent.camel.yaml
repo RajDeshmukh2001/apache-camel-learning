@@ -1,0 +1,23 @@
+- route:
+    id: do-try
+    from:
+      uri: timer:doTry
+      parameters:
+        period: 1000
+        repeatCount: 1
+      steps:
+        - doTry:
+            steps:
+              - throwException:
+                  exceptionType: java.lang.ArithmeticException
+                  message: "Cannot divide by zero"
+            doCatch:
+              - exception:
+                  - java.lang.ArithmeticException
+                steps:
+                  - log:
+                      message: "Exception: ${exception.message}"
+            doFinally:
+              steps:
+                - log:
+                    message: "Finally block"
