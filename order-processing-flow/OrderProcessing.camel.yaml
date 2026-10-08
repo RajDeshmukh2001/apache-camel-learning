@@ -27,6 +27,10 @@
             name: orderType
             constant: "ONLINE"
 
+        - setVariable:
+            name: paymentAmount
+            simple: "${body[payments][0][amount]}"
+
         - log:
             message: "Received order: ${header.orderId}"
 
@@ -35,6 +39,27 @@
 
         - log:
             message: "Order Type: ${exchangeProperty.orderType}"
+
+        - choice:
+            when:
+              - simple: "${exchangeProperty.orderType} == 'ONLINE'"
+                steps:
+                  - log:
+                      message: "Processing ONLINE order"
+              - simple: "${exchangeProperty.orderType} == 'OFFLINE'"
+                steps:
+                  - log:
+                      message: "Processing OFFLINE order"
+            otherwise:
+              steps:
+                  - log:
+                      message: "Unknown order type"
+
+        - filter:
+            simple: "${variable.paymentAmount} > 0"
+            steps:
+              - log:
+                  message: "Payment is valid: ${variable.paymentAmount}"
 
         - setBody:
             simple: |
