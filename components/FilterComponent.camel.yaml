@@ -1,0 +1,13 @@
+- route:
+    from:
+      uri: timer:filter?repeatCount=1
+      steps:
+        - setHeader:
+            disabled: false
+            name: number
+            constant: "900"
+        - filter:
+            simple: "${header.number} > 1000"
+            steps:
+              - log:
+                  message: "Number is greater than 1000"
