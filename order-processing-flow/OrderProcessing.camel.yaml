@@ -1,0 +1,31 @@
+- rest:
+    path: /api
+    post:
+      - path: /orders
+        consumes: application/json
+        produces: application/json
+        to: direct:processOrder
+
+- route:
+    id: process-order
+    from:
+      uri: direct:processOrder
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+
+        - setHeader:
+            name: orderId
+            simple: "${body[orderId]}"
+
+        - log:
+            message: "Received order: ${header.orderId}"
+
+        - setBody:
+            simple: |
+              {
+                "status": "success",
+                "orderId": "${header.orderId}",
+                "data": "${body}"
+              }
