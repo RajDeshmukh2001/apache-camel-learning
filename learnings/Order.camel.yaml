@@ -1,0 +1,24 @@
+- route:
+    id: route-2693
+    from:
+      id: from-1619
+      uri: timer:order
+      parameters:
+        timerName: order
+        repeatCount: 1
+      steps:
+        - setBody:
+            id: setBody-2302
+            simple:
+              expression: "Laptop - Quantity: 1, Price: 50000"
+        - setHeader:
+            id: setHeader-2174
+            constant:
+              expression: ORD-12345
+            name: orderId
+        - log:
+            id: log-1731
+            message: "Processing order: ${header.orderId}"
+        - log:
+            id: log-1417
+            message: "Order Details: ${body}"
