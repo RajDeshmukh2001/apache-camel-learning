@@ -1,0 +1,25 @@
+- route:
+    from:
+      uri: timer:choice
+      parameters:
+        period: 1000
+        repeatCount: 1
+      steps:
+        - setBody:
+            constant: "10000"
+        - choice:
+            when:
+              - simple: "${body} > 2000"
+                steps:
+                  - log:
+                      message: "Number is greater than 2000"
+              - simple: "${body} < 2000"
+                steps:
+                  - log:
+                      message: "Number is less than 2000"
+            otherwise:
+              steps:
+                - log:
+                    message: "Number is equal to 2000"
+
+          
