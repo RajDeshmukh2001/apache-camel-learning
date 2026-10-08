@@ -1,0 +1,27 @@
+- route:
+    id: do-try-example
+    from:
+      uri: timer:doTryExample
+      parameters:
+        period: 1000
+        repeatCount: 1
+      steps:
+        - setHeader:
+            name: userId
+            simple: "${random(1, 10)}"
+        - doTry:
+            steps:
+              - log:
+                  message: "Fetching user ${header.userId}"
+              - toD:
+                  uri: "http://localhost:9999/api/products/${header.userId}"
+            doCatch:
+              - exception:
+                  - java.lang.Exception
+                steps:
+                  - log:
+                      message: "Product API is unavailable. Could not fetch product ${header.userId}"
+            doFinally:
+              steps:
+                - log:
+                    message: "Product API processing completed"
