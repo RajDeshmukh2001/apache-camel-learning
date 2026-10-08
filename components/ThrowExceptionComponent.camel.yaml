@@ -1,0 +1,29 @@
+- route:
+    from:
+      uri: timer:throw-exception?repeatCount=1
+      steps:
+        - setVariable:
+            disabled: false
+            name: quantity
+            constant: "-4"
+
+        - doTry:
+            steps:
+              - choice:
+                  when:
+                    - expression:
+                        simple: "${variable.quantity} <= 0"
+                      steps:
+                        - throwException:
+                            exceptionType: java.lang.IllegalArgumentException
+                            message: "Quantity must be greater than zero"
+                  otherwise:
+                    steps:
+                      - log:
+                          message: "Quantity is valid: ${variable.quantity}"
+            doCatch:
+              - exception:
+                  - java.lang.IllegalArgumentException
+                steps:  
+                  - log:
+                      message: "Quantity is invalid: ${variable.quantity}"
