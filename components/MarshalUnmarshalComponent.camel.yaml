@@ -1,0 +1,31 @@
+- route:
+    id: product-json
+    from:
+      uri: timer:product
+      parameters:
+        repeatCount: "1"
+      steps:
+        - setBody:
+            constant: |
+              {
+                "id": 101,
+                "name": "ThinkPad Laptop",
+                "price": 50000
+              }
+
+        - log:
+            message: "Before unmarshal: ${body}"
+
+        - unmarshal:
+            json:
+              library: Jackson
+
+        - log:
+            message: "After unmarshal: ${body}"
+
+        - marshal:
+            json:
+              library: Jackson
+
+        - log:
+            message: "After marshal: ${body}"
