@@ -5,9 +5,10 @@
         - setHeader:
             disabled: false
             name: number
-            constant: "900"
+            constant: "9000"
         - filter:
-            simple: "${header.number} > 1000"
+            expression:
+              simple: "${header.number} > 1000"
             steps:
               - log:
                   message: "Number is greater than 1000"

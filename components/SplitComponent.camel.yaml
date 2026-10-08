@@ -5,7 +5,8 @@
         - setBody:
             simple: "Raj,Virat,Rohit"
         - split:
-            simple: "${body}"
+            expression:
+                simple: "${body}"
             steps:
               - log:
                   message: "Processing record: ${body}"

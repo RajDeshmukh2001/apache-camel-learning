@@ -1,0 +1,5 @@
+Hello $headers.customerName,
+
+Your order $headers.orderId has been placed successfully.
+
+Product: $headers.product

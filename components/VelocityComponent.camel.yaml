@@ -1,0 +1,19 @@
+- route:
+    from: 
+      uri: timer:velocity?repeatCount=1
+      steps:
+        - setHeader:
+            name: customerName
+            constant: Raj
+        - setHeader:
+            name: orderId
+            constant: ORD-12345
+        - setHeader:
+            name: product
+            constant: ThinkPad Laptop
+        
+        - toD:
+            uri: velocity:order-confirmation.vm
+
+        - log:
+            message: "${body}"
