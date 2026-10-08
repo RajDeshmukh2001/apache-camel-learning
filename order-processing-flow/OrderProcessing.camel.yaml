@@ -19,8 +19,22 @@
             name: orderId
             simple: "${body[orderId]}"
 
+        - setVariable:
+            name: deliveryCharge
+            constant: "100"
+
+        - setProperty:
+            name: orderType
+            constant: "ONLINE"
+
         - log:
             message: "Received order: ${header.orderId}"
+
+        - log:
+            message: "Delivery Charge: ${variable.deliveryCharge}"
+
+        - log:
+            message: "Order Type: ${exchangeProperty.orderType}"
 
         - setBody:
             simple: |
