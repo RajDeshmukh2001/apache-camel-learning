@@ -1,0 +1,9 @@
+- route:
+    from:
+      uri: timer:clock
+      parameters:
+        repeatCount: "1"
+      steps:
+        - setBody:
+            simple: "Current Date & Time: ${date:now:yyyy-MM-dd HH:mm:ss}"
+        - log: ${body}
