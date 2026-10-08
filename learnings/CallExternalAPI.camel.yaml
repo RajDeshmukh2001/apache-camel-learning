@@ -1,0 +1,20 @@
+- route:
+    id: call-external-api
+    from:
+      uri: timer:externalApi
+      parameters:
+        period: 1000
+        repeatCount: 1
+      steps:
+        - setHeader:
+            disabled: false
+            name: CamelHttpMethod
+            constant: GET
+        - setHeader:
+            disabled: false
+            name: postId
+            simple: "${random(1, 10)}"
+        - toD:
+            uri: "https://jsonplaceholder.typicode.com/posts/${header.postId}"
+        - log:
+            message: "HTTP ${header.CamelHttpResponseCode} -> ${body}"
