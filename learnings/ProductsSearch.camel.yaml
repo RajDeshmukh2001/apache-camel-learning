@@ -1,0 +1,40 @@
+- route:
+    id: get-products
+    from:
+      uri: rest
+      parameters:
+        method: get
+        path: /api/products
+        produces: application/json
+      steps:
+        - log:
+            message: GET products
+        - setHeader:
+            disabled: false
+            name: Content-Type
+            constant: application/json
+        - setBody:
+            simple: |
+              [
+                {"id": 101, "name": "ThinkPad Laptop", "category": "laptop"},
+                {"id": 102, "name": "Dell Laptop", "category": "laptop"}
+              ]
+
+- route:
+    id: post-product
+    from:
+      uri: rest
+      parameters:
+        method: post
+        path: /api/products
+        consumes: application/json
+        produces: application/json
+      steps:
+        - log:
+            message: POST product
+        - setHeader:
+            disabled: false
+            name: Content-Type
+            constant: application/json
+        - setBody:
+            simple: '{ "status": "success", "product": ${body} }'
