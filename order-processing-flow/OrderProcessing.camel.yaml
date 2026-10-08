@@ -73,10 +73,38 @@
                     - log:
                         message: "Valid item: ${body[name]}, Quantity: ${body[quantity]}"
 
-        - setBody:
-            simple: |
-              {
-                "status": "success",
-                "orderId": "${header.orderId}",
-                "data": "${body}"
-              }
+        - doTry:
+            steps:
+              - choice:
+                  when:
+                    - simple: "${variable.paymentAmount} <= 0"
+                      steps:
+                        - throwException:
+                            exceptionType: java.lang.IllegalArgumentException
+                            message: "Invalid payment amount: ${variable.paymentAmount}"
+                  otherwise:
+                    steps:
+                      - log:
+                          message: "Payment amount is valid: ${variable.paymentAmount}"
+                      
+                      - setBody:
+                          simple: |
+                            {
+                              "status": "success",
+                              "orderId": "${header.orderId}",
+                              "data": "${body}"
+                            }
+
+            doCatch:
+              - exception:
+                  - java.lang.IllegalArgumentException
+                steps:
+                  - log:
+                      message: "Order ${header.orderId} failed: ${exception.message}"
+                  - setBody:
+                      simple: |
+                        {
+                          "status": "failed",
+                          "orderId": "${header.orderId}",
+                          "message": "${exception.message}"
+                        }
