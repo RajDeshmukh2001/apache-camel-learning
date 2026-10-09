@@ -1,135 +1,185 @@
 - rest:
-      path: /api
-      post:
-          - path: /orders
-            consumes: application/json
-            produces: application/json
-            to: direct:processOrder
+        path: /api
+        post:
+              - path: /orders
+                consumes: application/json
+                produces: application/json
+                to: direct:processOrder
 
 - beans:
-    - name: postgresqlDatabase
-      type: org.apache.commons.dbcp2.BasicDataSource
-      properties:
-        driverClassName: org.postgresql.Driver
-        url: jdbc:postgresql://localhost:5432/camel-learning
-        username: postgres
-        password: raj30
+        - name: postgresqlDatabase
+          type: org.apache.commons.dbcp2.BasicDataSource
+          properties:
+                driverClassName: org.postgresql.Driver
+                url: jdbc:postgresql://localhost:5432/camel-learning
+                username: postgres
+                password: raj30
 
 - route:
-      id: process-order
-      from:
-          uri: direct:processOrder
-          steps:
-              - unmarshal:
-                    json:
-                        library: Jackson
+        id: process-order
+        from:
+              uri: direct:processOrder
+              steps:
+                    - doTry:
+                            steps:
+                                  - unmarshal:
+                                          json:
+                                                library: Jackson
+                                  - setVariable:
+                                          name: orderData
+                                          simple: "${body}"
 
-              - setHeader:
-                    name: orderId
-                    simple: "${body[orderId]}"
+                                  - setHeader:
+                                          name: orderId
+                                          simple: "${body[orderId]}"
 
-              - setVariable:
-                    name: deliveryCharge
-                    constant: "100"
+                                  - setVariable:
+                                          name: deliveryCharge
+                                          constant: "100"
 
-              - setProperty:
-                    name: orderType
-                    constant: "ONLINE"
+                                  - setProperty:
+                                          name: orderType
+                                          constant: "ONLINE"
 
-              - setVariable:
-                    name: paymentAmount
-                    simple: "${body[payments][0][amount]}"
+                                  - setVariable:
+                                          name: paymentAmount
+                                          simple: "${body[payments][0][amount]}"
 
-              - setHeader:
-                    name: customerName
-                    simple: "${body[customer][name]}"
+                                  - setHeader:
+                                          name: paymentAmount
+                                          simple: "${body[payments][0][amount]}"
 
-              - log:
-                    message: "Received order: ${header.orderId}"
+                                  - setHeader:
+                                          name: customerName
+                                          simple: "${body[customer][name]}"
 
-              - log:
-                    message: "Delivery Charge: ${variable.deliveryCharge}"
+                                  - setHeader:
+                                          name: customerId
+                                          simple: "${body[customer][id]}"
 
-              - log:
-                    message: "Order Type: ${exchangeProperty.orderType}"
+                                  - setHeader:
+                                          name: paymentMethod
+                                          simple: "${body[payments][0][method]}"
 
-              - choice:
-                    when:
-                        - simple: "${exchangeProperty.orderType} == 'ONLINE'"
-                          steps:
-                              - log:
-                                    message: "Processing ONLINE order"
-                        - simple: "${exchangeProperty.orderType} == 'OFFLINE'"
-                          steps:
-                              - log:
-                                    message: "Processing OFFLINE order"
-                    otherwise:
-                        steps:
-                            - log:
-                                  message: "Unknown order type"
-
-              - doTry:
-                    steps:
-                        - split:
-                              simple: "${body[items]}"
-                              steps:
                                   - log:
-                                        message: "Item: ${body}"
+                                          message: "Received order: ${header.orderId}"
 
-                                  - filter:
-                                        simple: "${body[quantity]} <= 0"
-                                        steps:
-                                            - throwException:
-                                                exceptionType: java.lang.IllegalArgumentException
-                                                message: "Invalid quantity for item: ${body[name]}"
-                                            - log:
-                                                  message: "Invalid quantity for item: ${body[name]}"
+                                  - log:
+                                          message: "Delivery Charge: ${variable.deliveryCharge}"
 
-                        - choice:
-                              when:
-                                  - simple: "${variable.paymentAmount} <= 0"
+                                  - log:
+                                          message: "Order Type: ${exchangeProperty.orderType}"
+
+                                  - choice:
+                                          when:
+                                                - simple: "${exchangeProperty.orderType} == 'ONLINE'"
+                                                  steps:
+                                                        - log:
+                                                                message: "Processing ONLINE order"
+                                                - simple: "${exchangeProperty.orderType} == 'OFFLINE'"
+                                                  steps:
+                                                        - log:
+                                                                message: "Processing OFFLINE order"
+                                          otherwise:
+                                                steps:
+                                                      - log:
+                                                              message: "Unknown order type"
+
+                                  - split:
+                                          simple: "${body[items]}"
+                                          steps:
+                                                - log:
+                                                        message: "Item: ${body}"
+
+                                                - filter:
+                                                        simple: "${body[quantity]} <= 0"
+                                                        steps:
+                                                              - throwException:
+                                                                      exceptionType: java.lang.IllegalArgumentException
+                                                                      message: "Invalid quantity for item: ${body[name]}"
+                                                              - log:
+                                                                      message: "Invalid quantity for item: ${body[name]}"
+
+                                  - choice:
+                                          when:
+                                                - simple: "${variable.paymentAmount} > 0"
+                                                  steps:
+                                                        - log:
+                                                                message: "Payment amount is valid: ${variable.paymentAmount}"
+
+                                                        - toD:
+                                                                uri: sql:INSERT INTO orders (order_id, customer_id, customer_name, amount, method) VALUES (:#orderId, :#customerId, :#customerName, :#paymentAmount, :#paymentMethod)
+                                                                parameters:
+                                                                      dataSource: "#postgresqlDatabase"
+
+                                                        - toD:
+                                                                uri: sql:SELECT id FROM orders WHERE order_id = :#orderId
+                                                                parameters:
+                                                                      dataSource: "#postgresqlDatabase"
+
+                                                        - setHeader:
+                                                                name: dbOrderId
+                                                                simple: "${body[0][id]}"
+                                                        - log:
+                                                                message: "${body}"
+
+                                                        - split:
+                                                                simple: "${variable.orderData[items]}"
+
+                                                                steps:
+                                                                      - log:
+                                                                              message: "Item: ${body}"
+                                                                      - toD:
+                                                                              uri: sql:INSERT INTO order_items (order_id, product_id, name, quantity, price) VALUES (:#dbOrderId, :#productId, :#name, :#quantity, :#price)
+                                                                              parameters:
+                                                                                    dataSource: "#postgresqlDatabase"
+                                                        - split:
+                                                                simple: "${variable.orderData[addresses]}"
+                                                                steps:
+                                                                      - log:
+                                                                              message: "${body}"
+                                                                      - toD:
+                                                                              uri: sql:INSERT INTO order_addresses (order_id, type, city) VALUES (:#dbOrderId, :#type, :#city)
+                                                                              parameters:
+                                                                                    dataSource: "#postgresqlDatabase"
+                                                        - marshal:
+                                                                json:
+                                                                      library: Jackson
+
+                                                        - toD:
+                                                                uri: velocity:notificationTemplate.vm
+
+                                                        - log:
+                                                                message: "Notification sent"
+
+                                                        - setBody:
+                                                                simple: |
+                                                                      {
+                                                                          "status": "success",
+                                                                          "orderId": "${header.orderId}",
+                                                                          "data": "${variable.orderData}"
+                                                                      }
+                                          otherwise:
+                                                steps:
+                                                      - throwException:
+                                                              exceptionType: java.lang.IllegalArgumentException
+                                                              message: "Invalid payment amount: ${variable.paymentAmount}"
+
+                            doCatch:
+                                  - exception:
+                                          - java.lang.Exception
                                     steps:
-                                        - throwException:
-                                              exceptionType: java.lang.IllegalArgumentException
-                                              message: "Invalid payment amount: ${variable.paymentAmount}"
-                              otherwise:
-                                  steps:
-                                      - log:
-                                            message: "Payment amount is valid: ${variable.paymentAmount}"
+                                          - log:
+                                                  message: "Order ${header.orderId} failed: ${exception.message}"
 
-                                      - setVariable:
-                                            name: orderData
-                                            simple: "${body}"
+                                          - setHeader:
+                                                  name: CamelHttpResponseCode
+                                                  constant: "400"
 
-                                      - toD:
-                                            uri: velocity:notificationTemplate.vm
-
-                                      - log:
-                                            message: "Notification sent"
-
-                                      - setBody:
-                                            simple: |
-                                                {
-                                                  "status": "success",
-                                                  "orderId": "${header.orderId}",
-                                                  "data": "${variable.orderData}"
-                                                }
-
-                    doCatch:
-                        - exception:
-                              - java.lang.IllegalArgumentException
-                          steps:
-                              - log:
-                                    message: "Order ${header.orderId} failed: ${exception.message}"
-
-                              - setHeader:
-                                    name: CamelHttpResponseCode
-                                    constant: "400"
-
-                              - setBody:
-                                    simple: |
-                                        {
-                                          "status": "failed",
-                                          "orderId": "${header.orderId}",
-                                          "message": "${exception.message}"
-                                        }
+                                          - setBody:
+                                                  simple: |
+                                                        {
+                                                            "status": "failed",
+                                                            "orderId": "${header.orderId}",
+                                                            "message": "${exception.message}"
+                                                        }
