@@ -1,0 +1,6 @@
+Order Confirmation
+
+Hello $headers.customerName,
+      
+Your order $headers.orderId has been confirmed.
+Payment amount: Rs. $headers.paymentAmount

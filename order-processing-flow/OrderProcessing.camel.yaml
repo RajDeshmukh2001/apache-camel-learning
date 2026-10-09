@@ -1,110 +1,135 @@
 - rest:
-    path: /api
-    post:
-      - path: /orders
-        consumes: application/json
-        produces: application/json
-        to: direct:processOrder
+      path: /api
+      post:
+          - path: /orders
+            consumes: application/json
+            produces: application/json
+            to: direct:processOrder
+
+- beans:
+    - name: postgresqlDatabase
+      type: org.apache.commons.dbcp2.BasicDataSource
+      properties:
+        driverClassName: org.postgresql.Driver
+        url: jdbc:postgresql://localhost:5432/camel-learning
+        username: postgres
+        password: raj30
 
 - route:
-    id: process-order
-    from:
-      uri: direct:processOrder
-      steps:
-        - unmarshal:
-            json:
-              library: Jackson
+      id: process-order
+      from:
+          uri: direct:processOrder
+          steps:
+              - unmarshal:
+                    json:
+                        library: Jackson
 
-        - setHeader:
-            name: orderId
-            simple: "${body[orderId]}"
+              - setHeader:
+                    name: orderId
+                    simple: "${body[orderId]}"
 
-        - setVariable:
-            name: deliveryCharge
-            constant: "100"
+              - setVariable:
+                    name: deliveryCharge
+                    constant: "100"
 
-        - setProperty:
-            name: orderType
-            constant: "ONLINE"
+              - setProperty:
+                    name: orderType
+                    constant: "ONLINE"
 
-        - setVariable:
-            name: paymentAmount
-            simple: "${body[payments][0][amount]}"
+              - setVariable:
+                    name: paymentAmount
+                    simple: "${body[payments][0][amount]}"
 
-        - log:
-            message: "Received order: ${header.orderId}"
+              - setHeader:
+                    name: customerName
+                    simple: "${body[customer][name]}"
 
-        - log:
-            message: "Delivery Charge: ${variable.deliveryCharge}"
-
-        - log:
-            message: "Order Type: ${exchangeProperty.orderType}"
-
-        - choice:
-            when:
-              - simple: "${exchangeProperty.orderType} == 'ONLINE'"
-                steps:
-                  - log:
-                      message: "Processing ONLINE order"
-              - simple: "${exchangeProperty.orderType} == 'OFFLINE'"
-                steps:
-                  - log:
-                      message: "Processing OFFLINE order"
-            otherwise:
-              steps:
-                  - log:
-                      message: "Unknown order type"
-
-        - filter:
-            simple: "${variable.paymentAmount} > 0"
-            steps:
               - log:
-                  message: "Payment is valid: ${variable.paymentAmount}"
+                    message: "Received order: ${header.orderId}"
 
-        - split:
-            simple: "${body[items]}"
-            steps:
               - log:
-                  message: "Item: ${body}"
+                    message: "Delivery Charge: ${variable.deliveryCharge}"
 
-              - filter:
-                  simple: "${body[quantity]} > 0"
-                  steps:
-                    - log:
-                        message: "Valid item: ${body[name]}, Quantity: ${body[quantity]}"
+              - log:
+                    message: "Order Type: ${exchangeProperty.orderType}"
 
-        - doTry:
-            steps:
               - choice:
-                  when:
-                    - simple: "${variable.paymentAmount} <= 0"
-                      steps:
-                        - throwException:
-                            exceptionType: java.lang.IllegalArgumentException
-                            message: "Invalid payment amount: ${variable.paymentAmount}"
-                  otherwise:
-                    steps:
-                      - log:
-                          message: "Payment amount is valid: ${variable.paymentAmount}"
-                      
-                      - setBody:
-                          simple: |
-                            {
-                              "status": "success",
-                              "orderId": "${header.orderId}",
-                              "data": "${body}"
-                            }
+                    when:
+                        - simple: "${exchangeProperty.orderType} == 'ONLINE'"
+                          steps:
+                              - log:
+                                    message: "Processing ONLINE order"
+                        - simple: "${exchangeProperty.orderType} == 'OFFLINE'"
+                          steps:
+                              - log:
+                                    message: "Processing OFFLINE order"
+                    otherwise:
+                        steps:
+                            - log:
+                                  message: "Unknown order type"
 
-            doCatch:
-              - exception:
-                  - java.lang.IllegalArgumentException
-                steps:
-                  - log:
-                      message: "Order ${header.orderId} failed: ${exception.message}"
-                  - setBody:
-                      simple: |
-                        {
-                          "status": "failed",
-                          "orderId": "${header.orderId}",
-                          "message": "${exception.message}"
-                        }
+              - doTry:
+                    steps:
+                        - split:
+                              simple: "${body[items]}"
+                              steps:
+                                  - log:
+                                        message: "Item: ${body}"
+
+                                  - filter:
+                                        simple: "${body[quantity]} <= 0"
+                                        steps:
+                                            - throwException:
+                                                exceptionType: java.lang.IllegalArgumentException
+                                                message: "Invalid quantity for item: ${body[name]}"
+                                            - log:
+                                                  message: "Invalid quantity for item: ${body[name]}"
+
+                        - choice:
+                              when:
+                                  - simple: "${variable.paymentAmount} <= 0"
+                                    steps:
+                                        - throwException:
+                                              exceptionType: java.lang.IllegalArgumentException
+                                              message: "Invalid payment amount: ${variable.paymentAmount}"
+                              otherwise:
+                                  steps:
+                                      - log:
+                                            message: "Payment amount is valid: ${variable.paymentAmount}"
+
+                                      - setVariable:
+                                            name: orderData
+                                            simple: "${body}"
+
+                                      - toD:
+                                            uri: velocity:notificationTemplate.vm
+
+                                      - log:
+                                            message: "Notification sent"
+
+                                      - setBody:
+                                            simple: |
+                                                {
+                                                  "status": "success",
+                                                  "orderId": "${header.orderId}",
+                                                  "data": "${variable.orderData}"
+                                                }
+
+                    doCatch:
+                        - exception:
+                              - java.lang.IllegalArgumentException
+                          steps:
+                              - log:
+                                    message: "Order ${header.orderId} failed: ${exception.message}"
+
+                              - setHeader:
+                                    name: CamelHttpResponseCode
+                                    constant: "400"
+
+                              - setBody:
+                                    simple: |
+                                        {
+                                          "status": "failed",
+                                          "orderId": "${header.orderId}",
+                                          "message": "${exception.message}"
+                                        }
