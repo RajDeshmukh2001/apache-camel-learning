@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "message": "Ticket created successfully",
+  "data": {
+    "title": "$!body.title",
+    "description": "$!body.description",
+    "status": "$!body.status",
+    "priority": "$!body.priority",
+  }
+}

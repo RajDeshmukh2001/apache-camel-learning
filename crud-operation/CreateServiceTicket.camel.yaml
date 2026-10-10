@@ -1,0 +1,99 @@
+- rest:
+    path: /api
+    post:
+      - path: /tickets
+        consumes: application/json
+        produces: application/json
+        to: direct:createTicket
+    id: rest-2235
+- route:
+    id: create-ticket-route
+    from:
+      uri: direct:createTicket
+      steps:
+        - doTry:
+            steps:
+              - unmarshal:
+                  json:
+                    library: Jackson
+              - log:
+                  message: ${body}
+              - setHeaders:
+                  headers:
+                    - name: employeeId
+                      simple:
+                        expression: ${body[reportedBy][employeeId]}
+                    - name: ticketPriority
+                      simple:
+                        expression: ${body[priority]}
+                    - name: ticketStatus
+                      simple:
+                        expression: ${body[status]}
+                    - name: ticketDescription
+                      simple:
+                        expression: ${body[description]}
+                    - name: ticketTitle
+                      simple:
+                        expression: ${body[title]}
+              - choice:
+                  when:
+                    - simple:
+                        expression: "${headers.ticketPriority} not in 'LOW,MEDIUM,HIGH'"
+                      steps:
+                        - throwException:
+                            exceptionType: java.lang.IllegalArgumentException
+                            message: Invalid priority value
+                    - simple:
+                        expression: "${headers.ticketStatus} not in 'OPEN,CLOSED,PENDING'"
+                      steps:
+                        - throwException:
+                            exceptionType: java.lang.IllegalArgumentException
+                            message: Invalid status value
+                    - simple:
+                        expression: ${headers.ticketTitle} == null || ${headers.ticketDescription} ==
+                          null || ${headers.ticketStatus} == null ||
+                          ${headers.ticketPriority} == null ||
+                          ${headers.ticketTitle} == '' ||
+                          ${headers.ticketDescription} == '' ||
+                          ${headers.ticketStatus} == '' ||
+                          ${headers.ticketPriority} == ''
+                      steps:
+                        - throwException:
+                            exceptionType: java.lang.IllegalArgumentException
+                            message: All fields are required
+              - toD:
+                  uri: sql
+                  parameters:
+                    query: INSERT INTO tickets (employee_id, title, description, status, priority)
+                      VALUES (:#employeeId, :#ticketTitle, :#ticketDescription,
+                      :#ticketStatus, :#ticketPriority)
+                    dataSource: "#postgreDatabase"
+              - to:
+                  uri: velocity
+                  parameters:
+                    resourceUri: ticket-created.vm
+            doCatch:
+              - exception:
+                  - java.lang.Exception
+                steps:
+                  - log:
+                      message: '{"success": false, "message": "${exception.message}"}'
+                  - setHeader:
+                      name: CamelHttpResponseCode
+                      simple:
+                        expression: "400"
+                  - setBody:
+                      simple:
+                        expression: |-
+                          {
+                            "success": false,
+                            "message": "${exception.message}"
+                          }
+- beans:
+    - name: postgreDatabase
+      type: org.apache.commons.dbcp2.BasicDataSource
+      properties:
+        driverClassName: org.postgresql.Driver
+        url: jdbc:postgresql://localhost:5432/service-ticket-ms
+        username: postgres
+        password: raj30
