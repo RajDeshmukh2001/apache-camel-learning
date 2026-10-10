@@ -1,0 +1,55 @@
+- rest:
+    id: rest-6947
+    path: /api
+    get:
+      - path: /tickets
+        produces: application/json
+        to: direct:getAllTickets
+- route:
+    id: route-2215
+    from:
+      uri: direct:getAllTickets
+      steps:
+        - doTry:
+            steps:
+              - toD:
+                  uri: sql
+                  parameters:
+                    query: SELECT * FROM tickets
+                    dataSource: "#postgreDatabase"
+              - log:
+                  message: ${body}
+              - to:
+                  uri: velocity
+                  parameters:
+                    resourceUri: get-all-tickets.vm
+              - setHeader:
+                  name: Content-Type
+                  constant:
+                    expression: application/json
+            doCatch:
+              - exception:
+                  - java.lang.Exception
+                steps:
+                  - log:
+                      message: '{"success": false, "message": "Unexpected error creating ticket:
+                        ${exception.message}"}'
+                  - setHeader:
+                      name: CamelHttpResponseCode
+                      simple:
+                        expression: "500"
+                  - setBody:
+                      simple:
+                        expression: |-
+                          {
+                            "success": false,
+                            "message": "${exception.message}"
+                          }
+- beans:
+    - name: postgreDatabase
+      type: org.apache.commons.dbcp2.BasicDataSource
+      properties:
+        driverClassName: org.postgresql.Driver
+        url: jdbc:postgresql://localhost:5432/service-ticket-ms
+        username: postgres
+        password: raj30

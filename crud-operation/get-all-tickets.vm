@@ -1,0 +1,16 @@
+{
+    "success": true,
+    "message": "Ticket created successfully",
+    "data": [
+        #if($body)
+            #foreach($ticket in $body)
+                {
+                    "title": "$!ticket.title",
+                    "description": "$!ticket.description",
+                    "status": "$!ticket.status",
+                    "priority": "$!ticket.priority"
+                }#if($foreach.hasNext),#end
+            #end
+        #end
+    ] 
+}
