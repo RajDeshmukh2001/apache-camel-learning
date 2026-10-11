@@ -1,0 +1,28 @@
+- route:
+    id: csv-velocity
+    from:
+      uri: file
+      parameters:
+        directoryName: data
+        fileName: employees.csv
+        noop: true
+      steps:
+        - unmarshal:
+            csv:
+              delimiter: ","
+        - split:
+            simple:
+              expression: ${body}
+            steps:
+              - to:
+                  uri: velocity
+                  parameters:
+                    resourceUri: templates/employee-card.vm
+              - to:
+                  uri: file
+                  parameters:
+                    directoryName: data
+                    fileName: employee-cards.txt
+                    fileExist: Append
+        - log:
+            message: "Employee cards written to out/employee-cards.txt"

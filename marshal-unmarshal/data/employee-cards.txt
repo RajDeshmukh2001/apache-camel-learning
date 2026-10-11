@@ -1,0 +1,15 @@
+ID : 1 
+Employee : Raj Deshmukh
+Location : Nashik
+Gender: Male
+--------------------
+ID : 2 
+Employee : Virat Kohli
+Location : Delhi
+Gender: Male
+--------------------
+ID : 3 
+Employee : Rohit Sharma
+Location : Mumbai
+Gender: Male
+--------------------
