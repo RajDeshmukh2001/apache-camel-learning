@@ -53,11 +53,3 @@
                             "message": "${exception.message}"
                           }
     id: route-6772
-- beans:
-    - name: postgreDatabase
-      type: org.apache.commons.dbcp2.BasicDataSource
-      properties:
-        driverClassName: org.postgresql.Driver
-        url: jdbc:postgresql://localhost:5432/service-ticket-ms
-        username: postgres
-        password: raj30
