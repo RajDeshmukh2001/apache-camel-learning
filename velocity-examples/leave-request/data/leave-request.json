@@ -1,0 +1,9 @@
+{
+    "requestId": 101,
+    "employeeName": "Raj Deshmukh",
+    "department": "IT",
+    "leaveType": "CASUAL",
+    "days": 3,
+    "status": "APPROVED",
+    "reason": "Personal work"
+}

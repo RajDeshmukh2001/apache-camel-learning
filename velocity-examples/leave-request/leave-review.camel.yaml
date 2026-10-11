@@ -1,0 +1,22 @@
+- route:
+    id: leave-review
+    from:
+      uri: file
+      parameters:
+        directoryName: data
+        fileName: leave-request.json
+        noop: true
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+        - to:
+            uri: velocity
+            parameters:
+              resourceUri: templates/leave-review.vm
+        - to:
+            uri: file
+            parameters:
+              directoryName: data
+              fileName: leave-review.txt
+              fileExist: Append

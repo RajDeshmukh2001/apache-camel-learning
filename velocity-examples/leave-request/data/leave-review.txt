@@ -1,0 +1,15 @@
+
+
+
+
+LEAVE REQUEST SUMMARY
+---------------------
+Request ID : 101
+Employee   : Raj Deshmukh
+Department : IT
+Leave Type : CASUAL
+Days       : 3
+Status     : APPROVED
+Reason     : Personal work
+
+Review     : Leave is approved

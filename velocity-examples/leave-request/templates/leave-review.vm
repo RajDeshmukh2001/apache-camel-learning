@@ -1,0 +1,31 @@
+#set($requestId = $body.get("requestId"))
+#set($employee = $body.get("employeeName"))
+#set($department = $body.get("department"))
+#set($leaveType = $body.get("leaveType"))
+#set($days = $body.get("days"))
+#set($status = $body.get("status"))
+#set($reason = $body.get("reason"))
+
+#set($reviewMessage = "Request needs review")
+
+#if($status == "APPROVED")
+    #set($reviewMessage = "Leave is approved")
+#elseif($status == "REJECTED")
+    #set($reviewMessage = "Leave is rejected")
+#end
+
+#if($days > 5)
+    #set($reviewMessage = "Manager review required: leave exceeds 5 days")
+#end
+
+LEAVE REQUEST SUMMARY
+---------------------
+Request ID : $requestId
+Employee   : $employee
+Department : $department
+Leave Type : $leaveType
+Days       : $days
+Status     : $status
+Reason     : $reason
+
+Review     : $reviewMessage
