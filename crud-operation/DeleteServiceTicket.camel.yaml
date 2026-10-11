@@ -1,5 +1,5 @@
 - rest:
-    id: rest-6947
+    id: rest-6923
     path: /api
     produces: application/json
     delete:
@@ -46,7 +46,7 @@
                   - java.lang.Exception
                 steps:
                   - log:
-                      message: '{"success": false, "message": "Unexpected error fetching tickets:
+                      message: '{"success": false, "message": "Unexpected error deleteing ticket:
                         ${exception.message}"}'
                   - setHeader:
                       name: CamelHttpResponseCode

@@ -1,0 +1,112 @@
+- rest:
+    id: rest-0787
+    path: /api
+    produces: application/json
+    patch:
+      - path: /tickets/{ticketId}
+        to: direct:updateTicketById
+- route:
+    from:
+      uri: direct:updateTicketById
+      steps:
+        - doTry:
+            steps:
+              - unmarshal:
+                  json:
+                    library: Jackson
+              - log:
+                  message: ${body}
+              - setHeaders:
+                  headers:
+                    - name: ticketPriority
+                      simple:
+                        expression: ${body[priority]}
+                    - name: ticketStatus
+                      simple:
+                        expression: ${body[status]}
+                    - name: ticketDescription
+                      simple:
+                        expression: ${body[description]}
+                    - name: ticketTitle
+                      simple:
+                        expression: ${body[title]}
+              - choice:
+                  when:
+                    - simple:
+                        expression: ${header.ticketTitle} == null && ${header.ticketDescription} == null && ${header.ticketStatus} == null &&
+                          ${header.ticketPriority} == null
+                      steps:
+                        - throwException:
+                            exceptionType: java.lang.IllegalArgumentException
+                            message: At least one field must be provided
+                    - simple:
+                        expression: ${header.ticketStatus} != null && ${header.ticketStatus} not in 'OPEN,CLOSED,PENDING'
+                      steps:
+                        - throwException:
+                            exceptionType: java.lang.IllegalArgumentException
+                            message: Invalid status value
+                    - simple:
+                        expression: ${header.ticketPriority} != null && ${header.ticketPriority} not in 'HIGH,MEDIUM,LOW'
+                      steps:
+                        - throwException:
+                            exceptionType: java.lang.IllegalArgumentException
+                            message: Invalid priority value
+              - toD:
+                  uri: sql
+                  parameters:
+                    query: >-
+                      UPDATE tickets SET 
+                        title = COALESCE(:#ticketTitle, title),
+                        description = COALESCE(:#ticketDescription, description),
+                        status = COALESCE(:#ticketStatus, status),
+                        priority = COALESCE(:#ticketPriority, priority)
+                      WHERE id = ${header.ticketId}
+                    dataSource: "#postgreDatabase"
+              - choice:
+                  when:
+                    - simple:
+                        expression: ${header.CamelSqlUpdateCount} == 0
+                      steps:
+                        - setHeader:
+                            name: CamelHttpResponseCode
+                            simple:
+                              expression: "404"
+                        - setBody:
+                            simple:
+                              expression: '{ "success": false, "message": "Ticket not found" }'
+                  otherwise:
+                    steps:
+                      - setBody:
+                          simple:
+                            expression: '{ "success": true, "message": "Ticket updated successfully" }'
+              - setHeader:
+                  name: Content-Type
+                  simple:
+                    expression: application/json
+            doCatch:
+              - exception:
+                  - java.lang.Exception
+                steps:
+                  - log:
+                      message: '{"success": false, "message": "Unexpected error updating ticket:
+                        ${exception.message}"}'
+                  - setHeader:
+                      name: CamelHttpResponseCode
+                      simple:
+                        expression: "500"
+                  - setBody:
+                      simple:
+                        expression: |-
+                          {
+                            "success": false,
+                            "message": "${exception.message}"
+                          }
+    id: route-2907
+- beans:
+    - name: postgreDatabase
+      type: org.apache.commons.dbcp2.BasicDataSource
+      properties:
+        driverClassName: org.postgresql.Driver
+        url: jdbc:postgresql://localhost:5432/service-ticket-ms
+        username: postgres
+        password: raj30
