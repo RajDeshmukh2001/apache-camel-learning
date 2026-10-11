@@ -1,0 +1,23 @@
+[
+    {
+        "id": 1,
+        "firstName": "Raj",
+        "lastName": "Deshmukh",
+        "city": "Nashik",
+        "gender": "Male"
+    },
+    {
+        "id": 2,
+        "firstName": "Virat",
+        "lastName": "Kohli",
+        "city": "Delhi",
+        "gender": "Male"
+    },
+    {
+        "id": 3,
+        "firstName": "Rohit",
+        "lastName": "Sharma",
+        "city": "Mumbai",
+        "gender": "Male"
+    }
+]

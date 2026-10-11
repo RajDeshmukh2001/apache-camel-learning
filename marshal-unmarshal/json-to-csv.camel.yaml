@@ -1,0 +1,27 @@
+- route:
+    id: json-to-csv
+    from:
+      uri: file
+      parameters:
+        directoryName: data
+        fileName: employees.json
+        noop: true
+      steps:
+        - log:
+            message: "JSON: ${body}"
+        - unmarshal:
+            json:
+              library: Jackson
+              useList: true
+        - log:
+            message: ${body}
+        - marshal:
+            csv:
+              delimiter: ","
+        - to:
+            uri: file
+            parameters:
+              directoryName: data
+              fileName: employees.csv
+        - log:
+            message: JSON to CSV
