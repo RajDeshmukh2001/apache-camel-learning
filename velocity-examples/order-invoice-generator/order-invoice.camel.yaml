@@ -1,0 +1,22 @@
+- route:
+    id: order-invoice
+    from:
+      uri: file
+      parameters:
+        directoryName: data
+        fileName: order.json
+        noop: true
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+        - to:
+            uri: velocity
+            parameters:
+              resourceUri: templates/order-invoice.vm
+        - to:
+            uri: file
+            parameters:
+              directoryName: data
+              fileName: invoice.txt
+              fileExist: Append

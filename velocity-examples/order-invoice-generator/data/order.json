@@ -1,0 +1,23 @@
+{
+    "orderId": "ORD-101",
+    "customer": "Raj Deshmukh",
+    "items": [
+        {
+            "name": "Keyboard",
+            "quantity": 2,
+            "price": 1200
+        },
+        {
+            "name": "Mouse",
+            "quantity": 1,
+            "price": 600
+        },
+        {
+            "name": "Monitor",
+            "quantity": 1,
+            "price": 8500
+        }
+    ],
+    "discount": 500,
+    "taxRate": 18
+}

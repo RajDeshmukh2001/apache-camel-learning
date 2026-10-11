@@ -1,0 +1,23 @@
+
+
+ORDER INVOICE
+-------------
+Order ID : ORD-101
+CUSTOMER : Raj Deshmukh
+
+ITEMS
+-----
+
+Keyboard | Quantity: 2 | Price: 1200 | Total: 2400
+
+Mouse | Quantity: 1 | Price: 600 | Total: 600
+
+Monitor | Quantity: 1 | Price: 8500 | Total: 8500
+
+
+SUMMARY
+-------
+Subtotal    : 11500
+Discount    : 500
+Tax         : 1980
+Grand Total : 12980

@@ -1,0 +1,35 @@
+#set($orderId = $body.get("orderId"))
+#set($customer = $body.get("customer"))
+#set($items = $body.get("items"))
+#set($discount = $body.get("discount"))
+#set($taxRate = $body.get("taxRate"))
+
+#set($subTotal = 0)
+
+ORDER INVOICE
+-------------
+Order ID : $orderId
+CUSTOMER : $customer
+
+ITEMS
+-----
+#foreach($item in $items)
+    #set($name = $item.get("name"))
+    #set($quantity = $item.get("quantity"))
+    #set($price = $item.get("price"))
+    #set($itemTotal = $quantity * $price)
+    #set($subTotal = $subTotal + $itemTotal)
+
+$name | Quantity: $quantity | Price: $price | Total: $itemTotal
+#end
+
+#set($taxableAmount = $subTotal - $discount)
+#set($tax = $taxableAmount * $taxRate / 100)
+#set($grandTotal = $taxableAmount + $tax)
+
+SUMMARY
+-------
+Subtotal    : $subTotal
+Discount    : $discount
+Tax         : $tax
+Grand Total : $grandTotal
