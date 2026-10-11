@@ -34,7 +34,7 @@
                   - java.lang.Exception
                 steps:
                   - log:
-                      message: '{"success": false, "message": "Unexpected error creating ticket:
+                      message: '{"success": false, "message": "Unexpected error fetching tickets:
                         ${exception.message}"}'
                   - setHeader:
                       name: CamelHttpResponseCode
@@ -91,7 +91,7 @@
                   - java.lang.Exception
                 steps:
                   - log:
-                      message: '{"success": false, "message": "Unexpected error creating ticket:
+                      message: '{"success": false, "message": "Unexpected error fetching ticket:
                         ${exception.message}"}'
                   - log:
                       message: "SQL failure: ${exception.stacktrace}"

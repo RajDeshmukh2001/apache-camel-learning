@@ -1,0 +1,70 @@
+- rest:
+    id: rest-6947
+    path: /api
+    produces: application/json
+    delete:
+      - path: /tickets/{ticketId}
+        to: direct:deleteTicketById
+- route:
+    from:
+      uri: direct:deleteTicketById
+      steps:
+        - doTry:
+            steps:
+              - toD:
+                  uri: sql
+                  parameters:
+                    query: DELETE FROM tickets WHERE id = ${header.ticketId}
+                    dataSource: "#postgreDatabase"
+              - log:
+                  message: "Rows deleted: ${header.CamelSqlUpdateCount}"
+              - choice:
+                  when:
+                    - simple:
+                        expression: ${header.CamelSqlUpdateCount} == 0
+                      steps:
+                        - setHeader:
+                            name: CamelHttpResponseCode
+                            simple:
+                              expression: "404"
+                        - setBody:
+                            id: setBody-1852
+                            simple:
+                              expression: >-
+                                { "success": false, "message": "Ticket not found" }
+                  otherwise:
+                    steps:
+                      - setBody:
+                          simple:
+                            expression: '{ "success": true, "message": "Ticket deleted successfully" }'
+              - setHeader:
+                  name: Content-Type
+                  constant:
+                    expression: application/json
+            doCatch:
+              - exception:
+                  - java.lang.Exception
+                steps:
+                  - log:
+                      message: '{"success": false, "message": "Unexpected error fetching tickets:
+                        ${exception.message}"}'
+                  - setHeader:
+                      name: CamelHttpResponseCode
+                      simple:
+                        expression: "500"
+                  - setBody:
+                      simple:
+                        expression: |-
+                          {
+                            "success": false,
+                            "message": "${exception.message}"
+                          }
+    id: route-6772
+- beans:
+    - name: postgreDatabase
+      type: org.apache.commons.dbcp2.BasicDataSource
+      properties:
+        driverClassName: org.postgresql.Driver
+        url: jdbc:postgresql://localhost:5432/service-ticket-ms
+        username: postgres
+        password: raj30
