@@ -1,0 +1,32 @@
+- route:
+    id: validate-ticket-id
+    from:
+      uri: direct:validate-ticket-id
+      steps:
+        - choice:
+            when:
+              - simple:
+                  expression: ${header.ticketId} > 0
+                steps:
+                  - throwException:
+                      exceptionType: java.lang.IllegalArgumentException
+                      message: Invalid ticket ID
+- route:
+    id: validate-ticket-enums
+    from:
+      uri: direct:vvalidate-ticket-enums
+      steps:
+        - choice:
+            when:
+              - simple:
+                  expression: "${header.ticketStatus} != null && ${header.ticketStatus} not in 'OPEN,CLOSED,PENDING'"
+                steps:
+                  - throwException:
+                      exceptionType: java.lang.IllegalArgumentException
+                      message: Invalid status value
+              - simple:
+                  expression: "${header.ticketPriority} != null && ${header.ticketPriority} not in 'HIGH,MEDIUM,LOW'"
+                steps:
+                  - throwException:
+                      exceptionType: java.lang.IllegalArgumentException
+                      message: Invalid priority value

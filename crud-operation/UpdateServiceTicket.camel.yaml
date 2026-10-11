@@ -23,6 +23,8 @@
                     - name: ticketTitle
                       simple:
                         expression: ${body[title]}
+              - to:
+                  uri: direct:validate-ticket-id
               - choice:
                   when:
                     - simple:
@@ -32,18 +34,8 @@
                         - throwException:
                             exceptionType: java.lang.IllegalArgumentException
                             message: At least one field must be provided
-                    - simple:
-                        expression: ${header.ticketStatus} != null && ${header.ticketStatus} not in 'OPEN,CLOSED,PENDING'
-                      steps:
-                        - throwException:
-                            exceptionType: java.lang.IllegalArgumentException
-                            message: Invalid status value
-                    - simple:
-                        expression: ${header.ticketPriority} != null && ${header.ticketPriority} not in 'HIGH,MEDIUM,LOW'
-                      steps:
-                        - throwException:
-                            exceptionType: java.lang.IllegalArgumentException
-                            message: Invalid priority value
+              - to:
+                  uri: direct:validate-ticket-enums
               - toD:
                   uri: sql
                   parameters:

@@ -4,6 +4,8 @@
       steps:
         - doTry:
             steps:
+              - to:
+                  uri: direct:validate-ticket-id
               - toD:
                   uri: sql
                   parameters:

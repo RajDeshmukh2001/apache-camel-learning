@@ -30,18 +30,6 @@
               - choice:
                   when:
                     - simple:
-                        expression: "${headers.ticketPriority} not in 'LOW,MEDIUM,HIGH'"
-                      steps:
-                        - throwException:
-                            exceptionType: java.lang.IllegalArgumentException
-                            message: Invalid priority value
-                    - simple:
-                        expression: "${headers.ticketStatus} not in 'OPEN,CLOSED,PENDING'"
-                      steps:
-                        - throwException:
-                            exceptionType: java.lang.IllegalArgumentException
-                            message: Invalid status value
-                    - simple:
                         expression: ${headers.ticketTitle} == null || ${headers.ticketDescription} ==
                           null || ${headers.ticketStatus} == null ||
                           ${headers.ticketPriority} == null ||
@@ -53,6 +41,8 @@
                         - throwException:
                             exceptionType: java.lang.IllegalArgumentException
                             message: All fields are required
+              - to:
+                  uri: direct:validate-ticket-enums
               - toD:
                   uri: sql
                   parameters:
