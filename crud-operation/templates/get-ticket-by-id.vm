@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "message": "Ticket retrieved  successfully",
+  "data": {
+    "id": "$!body.id",
+    "title": "$!body.title",
+    "description": "$!body.description",
+    "status": "$!body.status",
+    "priority": "$!body.priority"
+  }
+}

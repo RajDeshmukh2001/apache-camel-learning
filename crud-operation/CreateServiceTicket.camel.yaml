@@ -71,7 +71,7 @@
               - to:
                   uri: velocity
                   parameters:
-                    resourceUri: ticket-created.vm
+                    resourceUri: templates/ticket-created.vm
             doCatch:
               - exception:
                   - java.lang.Exception

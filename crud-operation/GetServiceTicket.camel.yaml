@@ -1,10 +1,12 @@
 - rest:
     id: rest-6947
     path: /api
+    produces: application/json
     get:
       - path: /tickets
-        produces: application/json
         to: direct:getAllTickets
+      - path: /tickets/{ticketId}
+        to: direct:getTicketById
 - route:
     id: route-2215
     from:
@@ -22,7 +24,7 @@
               - to:
                   uri: velocity
                   parameters:
-                    resourceUri: get-all-tickets.vm
+                    resourceUri: templates/get-all-tickets.vm
               - setHeader:
                   name: Content-Type
                   constant:
@@ -34,6 +36,65 @@
                   - log:
                       message: '{"success": false, "message": "Unexpected error creating ticket:
                         ${exception.message}"}'
+                  - setHeader:
+                      name: CamelHttpResponseCode
+                      simple:
+                        expression: "500"
+                  - setBody:
+                      simple:
+                        expression: |-
+                          {
+                            "success": false,
+                            "message": "${exception.message}"
+                          }
+- route:
+    id: route-2216
+    from:
+      uri: direct:getTicketById
+      steps:
+        - doTry:
+            steps:
+              - toD:
+                  uri: sql
+                  parameters:
+                    query: SELECT * FROM tickets WHERE id = ${header.ticketId}
+                    dataSource: "#postgreDatabase"
+                    outputType: SelectOne
+              - choice:
+                  when:
+                    - simple: ${body} == null
+                      steps:
+                        - setHeader:
+                            name: CamelHttpResponseCode
+                            constant:
+                              expression: "404"
+                        - setBody:
+                            simple:
+                              expression: '{"success":false,"message":"Ticket not found"}'
+                        - setHeader:
+                            name: Content-Type
+                            constant:
+                              expression: application/json
+                        - stop: {}
+              - log:
+                  message: ${body}
+              - to:
+                  uri: velocity
+                  parameters:
+                    resourceUri: templates/get-ticket-by-id.vm
+              - setHeader:
+                  name: Content-Type
+                  constant:
+                    expression: application/json
+            doCatch:
+              - exception:
+                  - java.lang.Exception
+                steps:
+                  - log:
+                      message: '{"success": false, "message": "Unexpected error creating ticket:
+                        ${exception.message}"}'
+                  - log:
+                      message: "SQL failure: ${exception.stacktrace}"
                   - setHeader:
                       name: CamelHttpResponseCode
                       simple:
