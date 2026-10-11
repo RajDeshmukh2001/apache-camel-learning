@@ -1,11 +1,3 @@
-- rest:
-    path: /api
-    post:
-      - path: /tickets
-        consumes: application/json
-        produces: application/json
-        to: direct:createTicket
-    id: rest-2235
 - route:
     id: create-ticket-route
     from:

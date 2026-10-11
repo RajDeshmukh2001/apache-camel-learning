@@ -1,0 +1,20 @@
+- rest:
+    id: ticket-api
+    path: /api
+    produces: application/json
+    post:
+      - path: /tickets
+        consumes: application/json
+        to: direct:createTicket
+    get:
+      - path: /tickets
+        to: direct:getAllTickets
+      - path: /tickets/{ticketId}
+        to: direct:getTicketById
+    patch:
+      - path: /tickets/{ticketId}
+        consumes: application/json
+        to: direct:updateTicketById
+    delete:
+      - path: /tickets/{ticketId}
+        to: direct:deleteTicketById

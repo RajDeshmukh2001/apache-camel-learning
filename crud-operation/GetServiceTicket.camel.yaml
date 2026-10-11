@@ -1,12 +1,3 @@
-- rest:
-    id: rest-6947
-    path: /api
-    produces: application/json
-    get:
-      - path: /tickets
-        to: direct:getAllTickets
-      - path: /tickets/{ticketId}
-        to: direct:getTicketById
 - route:
     id: route-2215
     from:
