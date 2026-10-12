@@ -1,0 +1,40 @@
+- route:
+    id: publish-employee-event
+    from:
+      uri: file
+      parameters:
+        directoryName: data
+        fileName: employee-event.json
+        noop: true
+      steps:
+        - to:
+            uri: kafka
+            parameters:
+              topic: camel-employee-events
+              brokers: localhost:9092
+        - log:
+            message: "Published employee event to Kafka: ${body}"
+- route:
+    id: consume-employee-event
+    from:
+      uri: kafka
+      parameters:
+        topic: camel-employee-events
+        brokers: localhost:9092
+        groupId: camel-employee-consumer
+        autoOffsetReset: earliest
+      steps:
+        - unmarshal:
+            json:
+              library: Jackson
+        - log:
+            message: "Received employee event from Kafka: ${body}"
+        - marshal:
+            csv:
+              delimiter: ","
+        - to:
+            uri: file
+            parameters:
+              directoryName: data
+              fileName: employee-events.csv
+              fileExist: Append
